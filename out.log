@@ -1,0 +1,15 @@
+top10 end
+getFbMaxRid end
+request page  1
+Traceback (most recent call last):
+  File "xqspider.py", line 237, in <module>
+    main()
+  File "xqspider.py", line 234, in main
+    deal_start()
+  File "xqspider.py", line 222, in deal_start
+    retaddtids = getFb(db)
+  File "xqspider.py", line 191, in getFb
+    json_data = json.loads(html)
+  File "/usr/local/python3/lib/python3.6/json/__init__.py", line 348, in loads
+    'not {!r}'.format(s.__class__.__name__))
+TypeError: the JSON object must be str, bytes or bytearray, not 'NoneType'

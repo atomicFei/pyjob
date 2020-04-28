@@ -1,0 +1,93 @@
+import requests
+from pyquery import PyQuery as pq
+import json
+import pymysql
+import time
+
+
+def get_one_page(url):
+    headers = {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Connection': 'keep-alive',
+        'Cookie': 'device_id=24700f9f1986800ab4fcc880530dd0ed; s=dl13zdk4n4; bid=48b9509ced80b384f22ffa6a5d762be4_jytnox8p; acw_tc=2760828315660492696381975e64643e210356cbc209ac426ad3b06d9cf0e6; __utmz=1.1566538518.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); aliyungf_tc=AQAAABB17l+yvA0Aog6O25x/6Jfm3N1B; snbim_minify=true; __utmc=1; Hm_lvt_1db88642e346389874251b5a1eded6e3=1567473796,1567479963,1567498214,1567563671; __utma=1.1648318386.1566538518.1567576436.1567580856.7;remember.sig=K4F3faYzmVuqC0iXIERCQf55g2Y; xq_a_token.sig=3RA8Yj426ZcAtLUTGZATAroJ7hw; xqat.sig=c0_cC0hQlVxztCLmGC37Q7Bs6BY; xq_r_token.sig=fgYCIKkoocP1NzbVRMiK8SBVVbw; xq_is_login.sig=J3LxgPVPUzbBg3Kee_PquUfih7Q; u.sig=rihy0QWdVn17PoOSpKh8c9Jt_Sg; remember=1; xq_a_token=a0dc8a48d6beea4ef53bba7fe626c3d323748201; xqat=a0dc8a48d6beea4ef53bba7fe626c3d323748201; xq_r_token=30dbd300ac4b70d8054f1f6beffb1d44a2c07add; xq_is_login=1; u=1519387230;Hm_lpvt_1db88642e346389874251b5a1eded6e3=1567650350',
+        'elastic-apm-traceparent':'00-0695e56d1fc84bc362baf06ded0e333a-995f5a99982d2ef7-01',
+        'Host': 'xueqiu.com',
+        'Referer': 'https://xueqiu.com/u/2404483727',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36',
+                      'X-Requested-With': 'XMLHttpRequest'
+    }
+
+    response = requests.get(url, headers=headers)
+    print(response.status_code)
+    if response.status_code == 200:
+        return response.text
+    return None
+
+def psql(allContent):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='root', port=3306, db='afxq')
+    cursor = db.cursor()
+    sql = 'insert into xqfb(tid,uid,time_before,uname,descp,pid,reply_txt) values (%s,%s,%s,%s,%s,%s,%s)'
+    try:
+        for con in allContent:
+         #   print(con)
+            tid = con.get('id')
+            uid = con.get('user_id')
+#            print('uid:%s,uid==siji:%s' % (uid,str(str(uid) == '2404483727')))
+            if str(uid) == '2404483727':
+
+                descp = con.get('text')
+                timeb = con.get('created_at')
+                timeint = int(timeb)/1000
+                timec = time.strftime("%Y-%m-%d %H:%M:%S",(time.localtime(timeint)))
+                uname = con.get('user').get('screen_name')
+                pid = con.get('root_in_reply_to_status_id')
+                replytxt = ''
+                if con.get('reply_comment') is None:
+                    replytxt=''
+                else:
+                    replytxt = con.get('reply_comment').get('text')
+
+                cursor.execute(sql, (tid, uid, timec, uname, descp,pid,replytxt))
+
+        db.commit()
+    except Exception as e:
+        print('error', e)
+        db.rollback()
+    db.close()
+
+
+def parse_json(jsonstr):
+    #print(jsonstr)
+    json_data = json.loads(jsonstr)
+   
+    allContent = json_data.get('comments')
+    psql(allContent)
+
+def getFbTop10(db):
+    cursor = db.cursor()
+    try:
+        sql = 'select  tid from xqfb where pid = %s order by tid desc '
+        cursor.execute(sql, ('-1'))
+        row = cursor.fetchone()
+        results = cursor. fetchall()
+        return results
+    except Exception as e:
+        print('error', e)
+    return None
+def main():
+    db = pymysql.connect(host='127.0.0.1', user='root', password='root', port=3306, db='afxq')
+    results = getFbTop10(db)
+    for row in results:
+        print('request tid',row[0])
+        tid = row[0]
+        url = 'https://xueqiu.com/statuses/comments.json?id='+tid+'&count=50&page=1&reply=true&asc=false&type=status'
+        html = get_one_page(url)
+        parse_json(html)
+        time.sleep(1)
+    db.close()
+
+main()
