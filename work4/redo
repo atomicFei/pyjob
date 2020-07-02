@@ -1,0 +1,58 @@
+nohup java -jar task-0.0.1-SNAPSHOT.jar --spring.config.location=application_task.yml >> logs/task.log 2>&1 &
+
+ nohup java -jar map-0.0.1-SNAPSHOT.jar --spring.config.location=application_map.properties >> logs/map.log 2>&1 &
+ 
+ 
+ nohup java -jar data-0.0.1-SNAPSHOT.jar --spring.config.location=application_data.yml >> logs/reald.log 2>&1 & 
+ 
+ 
+ nohup java -jar base-0.0.1-SNAPSHOT.jar --spring.config.location=application_base.yml >> logs/baseopt.log 2>&1 &
+ 
+ nohup java -jar  alarm-info-0.0.1-SNAPSHOT.jar --spring.config.location=application_alarm.yml  >> logs/alarm.log 2>&1 &
+ 
+ 
+ 
+ 
+ 
+  nohup java -jar plan-0.0.1-SNAPSHOT.jar  --spring.config.location=application_plan.yml >> logs/plan.log 2>&1 &
+  
+  web config
+  cd /home/titeam/rhysoft
+  
+  
+  docker cp default.conf  420a1d504d24:/etc/nginx/conf.d/
+   docker cp web nginx-web:/usr/share/nginx
+  
+   docker exec -it nginx-web /bin/bash
+  
+  
+  
+  
+   docker exec -it nginx-java /bin/bash
+  
+  
+  docker cp /home/titeam/rhysoft/app/softwork/map-0.0.1-SNAPSHOT.jar nginx-java:/usr/share/rhysoft/softwork
+ 
+  cd /usr/share/rhysoft/softwork/
+ 
+docker run -itd    -p 19092:80  --name nginx-java     --privileged=true  nginx-java
+
+docker run -itd    -p 19091:80  --name nginx-web2     --privileged=true  nginx-web
+
+docker run -itd    -p 20000:80  --name nginx-java2     --privileged=true  nginx-all
+
+98pc port
+   9990 映射rhyweb
+   9994 映射vueweb
+   9995 映射ssh -> 22
+   9997 ftp端口
+   
+    sqlplus /nolog
+   shutdown  immediate
+   
+   
+   1.修改路段中的收费站服务区的信息从机构获取
+2.修正根据人员id获取不到其所属机构的管辖路段
+3.新增可编辑设备匹配到的摄像机id
+4.
+ 
